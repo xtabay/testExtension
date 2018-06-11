@@ -19,8 +19,6 @@
 		"run_at": "document_end",
 		"all_frames": true
     }],
-	"web_accessible_resources": [
-        "popup.js", "content.js", "images/delete.svg"
-	],
-	"permissions": ["activeTab", "tabs"]
+	"web_accessible_resources": [ "popup.js", "content.js", "images/delete.svg"],
+	"permissions": ["activeTab", "tabs", "storage"]
 }

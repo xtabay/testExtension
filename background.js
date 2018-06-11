@@ -1,6 +1,8 @@
 const REFRESH_TIME = 1000*60*60;
 
 let domains = {};
+let counters = {};
+let isClosed;
 
 const getDomain = (url) => {
     const splUrl = url.split('.');
@@ -29,8 +31,15 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     const { hostname } = new URL(tab.url);
     const currentDomain = getDomain(hostname);
     const isContainDomain = Object.keys(domains).includes(currentDomain);
-        
-    if (isContainDomain && changeInfo.status === 'complete') {
-        chrome.tabs.sendMessage(tabId, {message: domains[currentDomain]});
+    const currentCounter = counters[currentDomain] || 1;
+
+    chrome.storage.sync.get(currentDomain, (result) => {
+        isClosed = result[currentDomain];
+    });
+
+    if (isContainDomain && !isClosed && changeInfo.status === 'complete' && currentCounter < 3) {
+        counters[currentDomain] = currentCounter + 1;
+
+        chrome.tabs.sendMessage(tabId, { message: domains[currentDomain], domain: currentDomain });
     }
 });

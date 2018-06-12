@@ -19,6 +19,7 @@
 		"run_at": "document_end",
 		"all_frames": true
     }],
-	"web_accessible_resources": [ "popup.js", "content.js", "images/delete.svg"],
-	"permissions": ["activeTab", "tabs", "storage"]
+	"web_accessible_resources": [ "popup.js", "content.js", "images/delete.svg", "app.css"],
+	"permissions": ["activeTab", "tabs", "storage"],
+	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }

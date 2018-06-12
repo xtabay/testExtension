@@ -1,4 +1,5 @@
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = {
     entry: {
@@ -20,25 +21,11 @@ module.exports = {
           }
         },
         {
-            test: /\.css$/,
-            exclude: /node_modules/,
+            test: /\.(sa|sc|c)ss$/,
             use: [
-                {
-                    loader: "style-loader"
-                },
-                {
-                    loader: "css-loader",
-                    options: {
-                        modules: true,
-                        importLoaders: 1,
-                        localIdentName: "[name]",
-                        sourceMap: true,
-                        minimize: true
-                    }
-                },
-                {
-                    loader: "sass-loader"
-                },
+                MiniCssExtractPlugin.loader,
+                'css-loader',
+                'sass-loader',
             ],
         }
       ]
@@ -49,6 +36,10 @@ module.exports = {
         }
     },
     plugins: [
-        new UglifyJsPlugin()
+        new UglifyJsPlugin(),
+        new MiniCssExtractPlugin({
+            filename: 'app.css',
+            path: __dirname + '\\build'
+        })
     ]
   };

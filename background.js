@@ -40,6 +40,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (isContainDomain && !isClosed && changeInfo.status === 'complete' && currentCounter < 3) {
         counters[currentDomain] = currentCounter + 1;
 
-        chrome.tabs.sendMessage(tabId, { message: domains[currentDomain], domain: currentDomain });
+        chrome.tabs.sendMessage(tabId, { type: 'DOMAIN_MESSAGE', message: domains[currentDomain], domain: currentDomain });
+    }
+});
+
+chrome.runtime.onMessage.addListener(({ type }, _, sendResponse) => {
+    if (type === 'DOMAINS_LIST') {
+        sendResponse({ domains });
     }
 });

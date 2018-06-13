@@ -32,15 +32,20 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     const currentDomain = getDomain(hostname);
     const isContainDomain = Object.keys(domains).includes(currentDomain);
     const currentCounter = counters[currentDomain] || 1;
+    const isCompleted = changeInfo.status === 'complete';
 
     chrome.storage.sync.get(currentDomain, (result) => {
         isClosed = result[currentDomain];
     });
 
-    if (isContainDomain && !isClosed && changeInfo.status === 'complete' && currentCounter < 3) {
+    if (isContainDomain && !isClosed && isCompleted && currentCounter < 3) {
         counters[currentDomain] = currentCounter + 1;
 
         chrome.tabs.sendMessage(tabId, { type: 'DOMAIN_MESSAGE', message: domains[currentDomain], domain: currentDomain });
+    }
+
+    if (isCompleted && currentDomain.match(/google\.(ru|com)|bing\.com/)) {
+        chrome.tabs.sendMessage(tabId, { type: 'INJECT_IMG', domains });
     }
 });
 

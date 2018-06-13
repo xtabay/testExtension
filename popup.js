@@ -4,10 +4,12 @@ import './styles.sass';
 chrome.runtime.sendMessage({ type: 'DOMAINS_LIST' }, ({ domains }) => {
     const domainsList = { domainsList: Object.keys(domains) };
 
-    let source = `
-        <div>
+    const source = `
+        <div class="test_popup_wrapper">
             {{#each domainsList}}
-                <a class="sex" href=https://{{this}} target="_blank">Перейти на сайт {{this}}</a>
+                <a class="test_popup_link" class="sex" href=https://{{this}} target="_blank">
+                    Перейти на сайт {{this}}
+                </a>
             {{/each}}
         </div>
     `;

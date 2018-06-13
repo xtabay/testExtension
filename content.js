@@ -7,23 +7,41 @@ const source = `
     </div>`;
 const template = Handlebars.compile(source);
 const image = chrome.extension.getURL("images/delete.svg");
+const logo = chrome.extension.getURL("images/128.png");
 
-chrome.runtime.onMessage.addListener(({ message, domain, type }) => {
+chrome.runtime.onMessage.addListener(({ message, domain, type, domains }) => {
+    const link = document.createElement("link");
+    link.href = chrome.extension.getURL("app.css");
+    link.type = "text/css";
+    link.rel = "stylesheet";
+    document.getElementsByTagName("head")[0].appendChild(link);
+
     if (type === 'DOMAIN_MESSAGE') {
-    const context = { message, image };
-    const html = template(context);
-        const link = document.createElement("link");
-        link.href = chrome.extension.getURL("app.css");
-        link.type = "text/css";
-        link.rel = "stylesheet";
+        const context = { message, image };
+        const html = template(context);
 
-        document.getElementsByTagName("head")[0].appendChild(link);
-    document.body.innerHTML += html;
+        document.body.innerHTML += html;
     
-    document.getElementById('testExtClose').addEventListener('click', () => {
-        chrome.storage.sync.set({ [domain]: true });
+        document.getElementById('testExtClose').addEventListener('click', () => {
+            chrome.storage.sync.set({ [domain]: true });
 
-        document.getElementById('testExtBlock').style.display = "none";
-    });
+            document.getElementById('testExtBlock').remove();
+        });
+    }
+
+    if (type === 'INJECT_IMG') {
+        const allElements = document.querySelectorAll('a');
+        const preparedDomains = Object.keys(domains).map((url) => url.replace('.', '\.'));
+        const basicRegex = `https?\:\/\/(www)?.?(${preparedDomains.join('|')})`;
+        const regexUrl = new RegExp(basicRegex);
+
+        allElements.forEach((el)=> {
+            const href = el.getAttribute('href');
+            const isResult = (el.getAttribute('target') === '_blank') || (el.parentNode.tagName === 'H2');
+
+            if (isResult && href && href.match(regexUrl)) {
+                el.innerHTML += `<img src=${logo} class="logo_injected">`
+            };
+        });
     }
 });

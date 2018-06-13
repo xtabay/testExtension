@@ -1,3 +1,4 @@
+build.pem
 /node_modules
 /build/background.js
 /build/content.js

@@ -1,29 +1,55 @@
 const REFRESH_TIME = 1000*60*60;
+const refreshKey = 'lastRefresh';
+const domainsKey = 'domains';
 
-let domains = {};
 let counters = {};
 let isClosed;
+let domains = {};
 
 const getDomain = (url) => {
     const splUrl = url.split('.');
     const maxIndex = splUrl.length - 1;
 
-    return `${splUrl[maxIndex - 1]}.${splUrl[maxIndex]}`
+    return `${splUrl[maxIndex - 1]}.${splUrl[maxIndex]}`;
 }
 
 const requestData = () => {
-    fetch('http://www.softomate.net/ext/employees/list.json')
-        .then(res => res.json())
-        .then(data => { 
-            domains = data.reduce((prev, curr) => {
-                return {
-                    ...prev,
-                    [curr.domain]: curr.message
-                }
-            }, {});
-        });
-    
-    window.setTimeout(requestData, REFRESH_TIME);
+    let lastRefresh;
+
+    chrome.storage.sync.get(refreshKey, (result) => {
+        lastRefresh = result[refreshKey] || 0;
+    });
+
+    chrome.storage.sync.get(domainsKey, (result) => {
+        domains = JSON.parse(result[domainsKey]);
+    });
+
+    const dateDiff = lastRefresh - Date.now();
+
+    if ((dateDiff <= REFRESH_TIME) || Object.keys(domains).length === 0) {
+        fetch('http://www.softomate.net/ext/employees/list.json')
+            .then(res => res.json())
+            .then(data => { 
+                domains = data.reduce((prev, curr) => {
+                    return {
+                        ...prev,
+                        [curr.domain]: curr.message
+                    }
+                }, {});
+
+                chrome.storage.sync.set({ [refreshKey]: Date.now() });
+                chrome.storage.sync.set({ [domainsKey]: JSON.stringify(domains) });
+
+                window.domains = domains;
+            });
+
+        return;
+    }
+
+    const nextRefresh = REFRESH_TIME - lastRefresh;
+    window.domains = domains;
+
+    window.setTimeout(requestData, nextRefresh );
 }     
 requestData();
 
@@ -31,7 +57,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     const { hostname } = new URL(tab.url);
     const currentDomain = getDomain(hostname);
     const isContainDomain = Object.keys(domains).includes(currentDomain);
-    const currentCounter = counters[currentDomain] || 1;
+    const currentCounter = counters[currentDomain] || 0;
     const isCompleted = changeInfo.status === 'complete';
 
     chrome.storage.sync.get(currentDomain, (result) => {
@@ -46,11 +72,5 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
     if (isCompleted && currentDomain.match(/google\.(ru|com)|bing\.com/)) {
         chrome.tabs.sendMessage(tabId, { type: 'INJECT_IMG', domains });
-    }
-});
-
-chrome.runtime.onMessage.addListener(({ type }, _, sendResponse) => {
-    if (type === 'DOMAINS_LIST') {
-        sendResponse({ domains });
     }
 });

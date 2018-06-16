@@ -19,13 +19,17 @@ chrome.runtime.onMessage.addListener(({ message, domain, type, domains }) => {
     if (type === 'DOMAIN_MESSAGE') {
         const context = { message, image };
         const html = template(context);
+        const messageBlock = document.createElement('div');
+        messageBlock.innerHTML = html;
 
-        document.body.innerHTML += html;
+        document.body.appendChild(messageBlock);
+        document.body.classList.add('extended');
     
         document.getElementById('testExtClose').addEventListener('click', () => {
             chrome.storage.sync.set({ [domain]: true });
 
             document.getElementById('testExtBlock').remove();
+            document.body.classList.remove('extended');
         });
     }
 
